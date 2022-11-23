@@ -42,12 +42,33 @@ ObjRelease(IMMDeviceCollection)
 Devices2 := {}
 For DeviceName, DeviceID in Devices
     List .= "(" . A_Index . ") " . DeviceName . "`n", ObjRawSet(Devices2, A_Index, DeviceID)
-InputBox n,, % List,,,,,,,, 1
+; InputBox n, Audio Output, % List,,,,,,,, 1
 
-MsgBox % Devices2[n]
+; Create the ListView with two columns, Name and Size:
+Gui, Add, ListView, r5 w400 gAudioListView AltSubmit, Device
 
-;IPolicyConfig::SetDefaultEndpoint
-IPolicyConfig := ComObjCreate("{870af99c-171d-4f9e-af0d-e63df40c2bc9}", "{F8679F50-850A-41CF-9C72-430F290290C8}") ;00000102-0000-0000-C000-000000000046 00000000-0000-0000-C000-000000000046
-R := DllCall(NumGet(NumGet(IPolicyConfig+0)+13*A_PtrSize), "UPtr", IPolicyConfig, "Str", Devices2[n], "UInt", 0, "UInt")
-ObjRelease(IPolicyConfig)
-MsgBox % Format("0x{:08X}", R)
+For DeviceName, DeviceID in Devices
+    LV_Add("Check", DeviceName)
+    ; List .= "(" . A_Index . ") " . DeviceName . "`n", ObjRawSet(Devices2, A_Index, DeviceID)
+
+Gui, Show
+
+; MsgBox % Devices2[n]
+return
+
+AudioListView:
+if (A_GuiEvent = "K")
+{
+    LV_GetText(RowText, A_EventInfo)  ; Get the text from the row's first field.
+    index:= LV_GetNext(0) ; Get selected column index
+    ; MsgBox, , Title, %index% %RowText%, 999
+
+    ; Set audio output device with index.
+    IPolicyConfig := ComObjCreate("{870af99c-171d-4f9e-af0d-e63df40c2bc9}", "{F8679F50-850A-41CF-9C72-430F290290C8}") ;00000102-0000-0000-C000-000000000046 00000000-0000-0000-C000-000000000046
+    R := DllCall(NumGet(NumGet(IPolicyConfig+0)+13*A_PtrSize), "UPtr", IPolicyConfig, "Str", Devices2[index], "UInt", 0, "UInt")
+    ObjRelease(IPolicyConfig)
+}
+return
+
+GuiClose:  ; Indicate that the script should exit automatically when the window is closed.
+ExitApp
