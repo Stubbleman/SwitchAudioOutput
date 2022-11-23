@@ -1,4 +1,6 @@
 ; Reference: https://www.autohotkey.com/boards/viewtopic.php?t=49980
+
+!+a::
 Devices := {}
 IMMDeviceEnumerator := ComObjCreate("{BCDE0395-E52F-467C-8E3D-C4579291692E}", "{A95664D2-9614-4F35-A746-DE8DB63617E6}")
 
@@ -39,29 +41,43 @@ Loop % (Count)
 ObjRelease(IMMDeviceCollection)
 
 
-Devices2 := {}
-For DeviceName, DeviceID in Devices
-    List .= "(" . A_Index . ") " . DeviceName . "`n", ObjRawSet(Devices2, A_Index, DeviceID)
-; InputBox n, Audio Output, % List,,,,,,,, 1
+; Devices2 := {}
+; For DeviceName, DeviceID in Devices
+;     List .= "(" . A_Index . ") " . DeviceName . "`n", ObjRawSet(Devices2, A_Index, DeviceID)
+; ; InputBox n, Audio Output, % List,,,,,,,, 1
 
 ; Create the ListView with two columns, Name and Size:
-Gui, Add, ListView, r5 w400 gAudioListView AltSubmit, Device
+Gui, Add, ListView, r5 w400 gAudioListView AltSubmit, #|Device
 
 For DeviceName, DeviceID in Devices
-    LV_Add("Check", DeviceName)
+    LV_Add(, A_Index, DeviceName)
     ; List .= "(" . A_Index . ") " . DeviceName . "`n", ObjRawSet(Devices2, A_Index, DeviceID)
 
 Gui, Show
 
 ; MsgBox % Devices2[n]
+
+KeyWait, Enter, D
+
+object.Delete(Devices)
+object.Delete(Devices2)
+
+Gui, Hide
+
 return
 
 AudioListView:
-if (A_GuiEvent = "K")
+Critical ,On　; Increase reliability, ensures that all "I" notifications are received.
+if (A_GuiEvent = "I")
 {
-    LV_GetText(RowText, A_EventInfo)  ; Get the text from the row's first field.
-    index:= LV_GetNext(0) ; Get selected column index
-    ; MsgBox, , Title, %index% %RowText%, 999
+    ;  InStr(ErrorLevel, "S", true)
+    ; LV_GetText(index, A_EventInfo)  ; Get the text from the row's first field.
+    ; LV_GetText(index, ErrorLevel)  ; Get the text from the row's first field.
+    index:= LV_GetNext() ; Get selected column index
+    ; LV_GetText(index, A_EventInfo , 1)
+    ; MsgBox, , Title, %index% , 999
+    ; MsgBox % ErrorLevel
+    ToolTip % index
 
     ; Set audio output device with index.
     IPolicyConfig := ComObjCreate("{870af99c-171d-4f9e-af0d-e63df40c2bc9}", "{F8679F50-850A-41CF-9C72-430F290290C8}") ;00000102-0000-0000-C000-000000000046 00000000-0000-0000-C000-000000000046
@@ -70,5 +86,5 @@ if (A_GuiEvent = "K")
 }
 return
 
-GuiClose:  ; Indicate that the script should exit automatically when the window is closed.
-ExitApp
+; GuiClose:  ; Indicate that the script should exit automatically when the window is closed.
+; ExitApp
