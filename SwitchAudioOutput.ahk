@@ -1,6 +1,4 @@
-; Reference: https://www.autohotkey.com/boards/viewtopic.php?t=49980
-
-!+a::
+!a::
 Devices := {}
 IMMDeviceEnumerator := ComObjCreate("{BCDE0395-E52F-467C-8E3D-C4579291692E}", "{A95664D2-9614-4F35-A746-DE8DB63617E6}")
 
@@ -40,22 +38,40 @@ Loop % (Count)
 }
 ObjRelease(IMMDeviceCollection)
 
+; Initail device count number
+DeviceCount := 1
 
 Devices2 := {}
 For DeviceName, DeviceID in Devices
-    List .= "(" . A_Index . ") " . DeviceName . "`n", ObjRawSet(Devices2, A_Index, DeviceID)
+    ObjRawSet(Devices2, A_Index, DeviceID)
+    DeviceCount := DeviceCount + 1
+    ; List .= "(" . A_Index . ") " . DeviceName . "`n", ObjRawSet(Devices2, A_Index, DeviceID)
 ; InputBox n, Audio Output, % List,,,,,,,, 1
 
-; Create the ListView with two columns, Name and Size:
-Gui, Add, ListView, r5 w400 gAudioListView AltSubmit, #|Device
+Gui, New
+Gui, Margin, 0, 0
+Gui, -Caption
+Gui, +AlwaysOnTop
+Gui, Color, black,black
+Gui, font, s12 w700 CWhite, Verdana
+
+; Create the ListView with a device column.
+; Raw number is given by device count.
+; E0x200 = WS_EX_CLIENTEDGE ( Extended style)
+Gui, Add, ListView, r%DeviceCount%  gAudioListView AltSubmit -E0x200 vnewobject BackgroundTrans -Border, Audio Device
+
 
 For DeviceName, DeviceID in Devices
-    LV_Add(, A_Index, DeviceName)
+    LV_Add(, DeviceName)
     ; List .= "(" . A_Index . ") " . DeviceName . "`n", ObjRawSet(Devices2, A_Index, DeviceID)
 
 Gui, Show
 
-; MsgBox % Devices2[n]
+WinSet,Transparent,180,SwitchAudioOutput.ahk
+WinGetPos, X, Y, W, H, A ; Retreive positoin and size of active window
+WinSet, Region,0-0 w%W% h%H% R30-30,SwitchAudioOutput.ahk
+
+; MsgBox, Size is %W% x %H%
 
 KeyWait, Enter, D
 
